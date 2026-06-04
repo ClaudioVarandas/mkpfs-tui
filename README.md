@@ -11,8 +11,8 @@ warnings and errors without ever leaving the terminal.
 
 > mkpfs-tui is a third-party frontend. It pins `mkpfs` as a dependency and never modifies it.
 
-**Contents:** [Operations](#operations) · [Requirements](#requirements) · [Install](#install) ·
-[Usage](#usage) · [Contributing](#contributing) · [License](#license)
+**Contents:** [Screenshots](#screenshots) · [Operations](#operations) · [Requirements](#requirements) ·
+[Install](#install) · [Usage](#usage) · [Contributing](#contributing) · [License](#license)
 
 ---
 
@@ -25,6 +25,30 @@ warnings and errors without ever leaving the terminal.
 | **Verify**  | Validate an image's structure and checksums — optionally against a source tree or expected CRC32 / manifest. |
 | **Tree**    | Browse the file tree stored inside an image. |
 | **Unpack**  | Extract an image to a target directory, with progress and a files/dirs/bytes summary. |
+
+---
+
+## Screenshots
+
+**About** — the welcome screen:
+
+![mkpfs-tui — the About / welcome screen](https://raw.githubusercontent.com/ClaudioVarandas/mkpfs-tui/master/screenshots/about.png)
+
+**Pack** — build an image from a folder or file:
+
+![mkpfs-tui — the Pack view](https://raw.githubusercontent.com/ClaudioVarandas/mkpfs-tui/master/screenshots/pack.png)
+
+**Inspect** — header, counts, sizes, and checksums:
+
+![mkpfs-tui — the Inspect view](https://raw.githubusercontent.com/ClaudioVarandas/mkpfs-tui/master/screenshots/inspect.png)
+
+**Verify** — structure / checksum checks with a PASS/FAIL banner:
+
+![mkpfs-tui — the Verify view](https://raw.githubusercontent.com/ClaudioVarandas/mkpfs-tui/master/screenshots/verify.png)
+
+**Tree** — browse the file tree stored inside an image:
+
+![mkpfs-tui — the Tree view](https://raw.githubusercontent.com/ClaudioVarandas/mkpfs-tui/master/screenshots/tree.png)
 
 ---
 
