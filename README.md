@@ -63,8 +63,8 @@ warnings and errors without ever leaving the terminal.
 
 ## Install
 
-> Until the first PyPI release the commands below won't resolve yet — grab a build from the
-> [Releases](https://github.com/ClaudioVarandas/mkpfs-tui/releases) page in the meantime.
+> Prefer a self-contained download? Grab a build from the
+> [Releases](https://github.com/ClaudioVarandas/mkpfs-tui/releases) page.
 
 The cross-platform way is via Python, using either [uv](https://docs.astral.sh/uv/) (recommended —
 `uvx` runs it without installing) or [pipx](https://pipx.pypa.io/) (installs the `mkpfs-tui` command).

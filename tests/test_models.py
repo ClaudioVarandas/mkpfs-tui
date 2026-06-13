@@ -15,7 +15,7 @@ def test_flags_emitted_only_when_non_default() -> None:
         mode="folder",
         source="src",
         output="out.pfs",
-        pfs_version="PS5",
+        pfs_version="PS4",
         inode_bits=64,
         block_size="65536",
         threshold_gain=5,
@@ -33,7 +33,7 @@ def test_flags_emitted_only_when_non_default() -> None:
     argv = build_pack_argv(opts)
     assert argv[:4] == ["pack", "folder", "src", "out.pfs"]
     assert "--no-compress" in argv
-    assert argv[argv.index("--version") + 1] == "PS5"
+    assert argv[argv.index("--version") + 1] == "PS4"
     assert argv[argv.index("--inode-bits") + 1] == "64"
     assert argv[argv.index("--block-size") + 1] == "65536"
     assert argv[argv.index("--threshold-gain") + 1] == "5"
@@ -47,6 +47,15 @@ def test_flags_emitted_only_when_non_default() -> None:
     assert "--dry-run" in argv
     assert "--verify" in argv
     assert "--no-adjust-output-file-extension" in argv
+
+
+def test_pfs_version_default_is_ps5_and_omitted() -> None:
+    # PS5 is both the app default and mkpfs's CLI default, so --version is not emitted.
+    assert PackOptions(mode="folder", source="s", output="o").pfs_version == "PS5"
+    assert "--version" not in build_pack_argv(PackOptions(mode="folder", source="s", output="o"))
+    # PS4 is non-default and must be passed explicitly.
+    ps4 = build_pack_argv(PackOptions(mode="folder", source="s", output="o", pfs_version="PS4"))
+    assert ps4[ps4.index("--version") + 1] == "PS4"
 
 
 def test_ekpfs_key_only_with_encrypted() -> None:

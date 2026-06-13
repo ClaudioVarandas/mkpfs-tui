@@ -50,8 +50,8 @@ class PackView(Container):
         yield PathField("Output image", "file", id="pack-output")
         with Horizontal(classes="field-row"):
             yield Select(
-                [("PS4", "PS4"), ("PS5", "PS5")],
-                value="PS4",
+                [("PS5", "PS5"), ("PS4", "PS4")],
+                value="PS5",
                 allow_blank=False,
                 id="pack-version",
             )
@@ -80,6 +80,11 @@ class PackView(Container):
                 with Horizontal(classes="toggle"):
                     yield Label(label)
                     yield Switch(value=default, id=switch_id)
+        yield Static(
+            "⚠ Compression is disabled for folders — the PS console misreads compressed app "
+            "folders. Compress via File mode (.exfat) instead.  (mkpfs #49)",
+            id="pack-folder-note",
+        )
         with Horizontal(classes="option-row"):
             yield Button("Pack", id="pack-run", variant="primary")
             yield Button("Cancel", id="pack-cancel", variant="error")
@@ -118,6 +123,8 @@ class PackView(Container):
         """Set initial inode-bits disabled state and widget labels."""
         self.query_one("#pack-inode-bits", Select).disabled = False
         self._auto_output = ""
+        # Folder is the default mode, where compression is unsupported (see #49).
+        self._apply_compress_lock(folder=True)
 
         # Border titles for numeric inputs and EKPFS
         titles = {
@@ -176,13 +183,31 @@ class PackView(Container):
         if event.switch.id == "pack-compress":
             self._maybe_autofill_output()
 
+    def _apply_compress_lock(self, *, folder: bool) -> None:
+        """Lock compression off in folder mode; restore the default in file mode.
+
+        mkpfs warns that a directly-packed app/game folder must not be compressed —
+        the console misreads compressed files (#49). Compression belongs to the
+        file/exfat wrapper flow. So in folder mode we force the Compress switch off
+        and disable it (and show the note); file mode re-enables it, default on.
+
+        Args:
+            folder: True for folder mode (lock off), False for file mode (unlock).
+        """
+        compress = self.query_one("#pack-compress", Switch)
+        compress.value = not folder
+        compress.disabled = folder
+        self.query_one("#pack-folder-note", Static).display = folder
+
     def on_radio_set_changed(self, event: RadioSet.Changed) -> None:
-        """Disable the inode-bits Select when File mode is selected.
+        """Toggle inode-bits and the compression lock when the mode changes.
 
         Args:
             event: The RadioSet.Changed event carrying the new pressed index.
         """
-        self.query_one("#pack-inode-bits", Select).disabled = event.index == 1
+        is_file = event.index == 1
+        self.query_one("#pack-inode-bits", Select).disabled = is_file
+        self._apply_compress_lock(folder=not is_file)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Pack (with overwrite gate) or cancel.

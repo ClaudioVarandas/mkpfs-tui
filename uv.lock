@@ -750,14 +750,14 @@ wheels = [
 
 [[package]]
 name = "mkpfs"
-version = "0.0.5"
+version = "0.0.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9d/53/e70caaa09824304f5bba8bd88ccdfde0de0ec69105bf4e43f56edb67d613/mkpfs-0.0.5.tar.gz", hash = "sha256:27175edb188edb0a657ade8970c2e29775255f14eda1632a185bcba8f909a158", size = 1277204, upload-time = "2026-06-02T17:19:39.737Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e1/f5/0283007b480e15946cd70f162f29c76fe3961ecd4aba1ffe630fa1387f29/mkpfs-0.0.8.tar.gz", hash = "sha256:e2d88b01385f65d8035830674bc4e6f4b56329eae89b2858557cd440e93616d5", size = 1317199, upload-time = "2026-06-09T23:08:45.152Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/35/ec/7e1379c2df4f1820b8763f300c26dc32c0975baf45c7ad4ae690aa8d77c0/mkpfs-0.0.5-py3-none-any.whl", hash = "sha256:1a957fce4531d4899b8b1084f6c56bbc865fc872575df3234aab715c54a41d05", size = 86147, upload-time = "2026-06-02T17:19:38.605Z" },
+    { url = "https://files.pythonhosted.org/packages/70/8a/0397614174c969def17e38b3052b22d08dae49717396c8d3b26791ebc26c/mkpfs-0.0.8-py3-none-any.whl", hash = "sha256:1e9effe701ef1ca8f96957bc9c7bead610933122d75e495f16338bf9029a0c15", size = 103855, upload-time = "2026-06-09T23:08:43.85Z" },
 ]
 
 [[package]]
@@ -782,7 +782,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "mkpfs", specifier = ">=0.0.5,<0.1.0" },
+    { name = "mkpfs", specifier = ">=0.0.8,<0.1.0" },
     { name = "textual", specifier = ">=0.86" },
 ]
 

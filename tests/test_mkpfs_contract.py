@@ -85,8 +85,9 @@ def test_extract_pfs_image_and_result_and_progress() -> None:
 
 
 def test_verify_file_payload_hashes_exists() -> None:
-    # mkpfs_runner._inspect_structure_only monkeypatches this global to a no-op so
-    # Inspect/Tree skip loading every file into RAM. An upstream rename must fail here.
+    # mkpfs_runner gates this global to a no-op so Inspect/Tree skip hashing — which
+    # (since mkpfs 0.0.7) reads the whole image off disk, slow on huge images. The pin
+    # floor is mkpfs>=0.0.8. An upstream rename of this symbol must fail here.
     assert callable(verify_file_payload_hashes)
 
 

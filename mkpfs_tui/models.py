@@ -12,7 +12,7 @@ class PackOptions:
     mode: str  # "folder" or "file"
     source: str
     output: str
-    pfs_version: str = "PS4"
+    pfs_version: str = "PS5"
     inode_bits: int = 32
     block_size: str = "auto"
     threshold_gain: int = 0
@@ -42,7 +42,8 @@ def build_pack_argv(opts: PackOptions) -> list[str]:
     argv.append("--no-adjust-output-file-extension")
     if not opts.compress:
         argv.append("--no-compress")
-    if opts.pfs_version != "PS4":
+    # PS5 is mkpfs's own default, so emit --version only for PS4.
+    if opts.pfs_version != "PS5":
         argv += ["--version", opts.pfs_version]
     if opts.mode == "folder" and opts.inode_bits != 32:
         argv += ["--inode-bits", str(opts.inode_bits)]

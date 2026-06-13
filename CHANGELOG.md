@@ -4,6 +4,36 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and this project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.2] — 2026-06-12
+
+### Changed
+
+- Bumped the pinned `mkpfs` floor to **`>=0.0.8`** (from `>=0.0.5`). This pulls in the upstream
+  streaming/flat-memory rewrite and several correctness fixes:
+  - **Flat-memory verify / tree / unpack** — mkpfs now streams each file block-by-block instead of
+    loading it into RAM. Verifying a 14.5 GB image (29.6 GB logical) now peaks at ~50 MB RSS where it
+    previously exhausted memory.
+  - **`pack file` streams to the image by default** (the legacy spool builder is opt-in upstream).
+  - **Faster post-pack verification**, a fix for **corruption on large game folders** (bad inode
+    mapping), and **safe inner-image renaming** that could otherwise break mounts.
+
+### Fixed
+
+- **Pack** now defaults the PFS version to **PS5** (matching mkpfs's own default and the common PPSA
+  target). This also fixes a mismatch where the old PS4 default emitted no `--version` flag, so mkpfs
+  silently built a **PS5** image while the form read "PS4".
+- **Pack** now locks compression **off in folder mode** (greyed switch + an inline note). mkpfs warns a
+  directly-packed app/game folder must not be compressed — the PS console misreads compressed files
+  ([mkpfs#49](https://github.com/PSBrew/MkPFS/issues/49)) — and compressed folder packing also spools up to
+  the full image size into the temp folder (which failed outright on a tmpfs `/tmp`). Compression stays
+  available in **file** mode (`.exfat`); folder output now auto-derives the uncompressed `.ffpfs` extension.
+
+### Internal
+
+- The Inspect/Tree payload-hashing gate is retained as a **speed** optimisation (skip reading the whole
+  image just to inspect its structure), now that the upstream memory pressure it originally guarded
+  against is gone. Comments, the OOM message, and the contract-test note were updated to match.
+
 ## [0.1.1] — 2026-06-04
 
 ### Fixed
@@ -65,5 +95,6 @@ First public release — a [Textual](https://textual.textualize.io/) terminal UI
 - Python ≥ 3.11. Pins `mkpfs >= 0.0.5, < 0.1.0` and `textual >= 0.86`.
 - Licensed GPL-3.0-or-later (it imports mkpfs, which is GPLv3).
 
+[0.1.2]: https://github.com/ClaudioVarandas/mkpfs-tui/releases/tag/v0.1.2
 [0.1.1]: https://github.com/ClaudioVarandas/mkpfs-tui/releases/tag/v0.1.1
 [0.1.0]: https://github.com/ClaudioVarandas/mkpfs-tui/releases/tag/v0.1.0

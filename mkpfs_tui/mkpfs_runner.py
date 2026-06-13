@@ -32,11 +32,12 @@ from mkpfs.pfs import (
 
 from mkpfs_tui.progress_parser import iter_cr_lf, parse_progress_line
 
-# inspect_pfs_image hashes every file payload, loading each file wholly into RAM
-# (which OOM-kills on huge files). Inspect and Tree don't need the hashes, so we
-# install a gate around mkpfs's verify_file_payload_hashes that skips the work when
-# the calling thread sets the thread-local flag. Thread-local (not a global swap) so
-# a concurrent real Verify on another worker thread still gets true hashes — no race.
+# inspect_pfs_image hashes every file payload. Since mkpfs 0.0.7 it streams each file
+# block-by-block (flat memory), but it still reads the WHOLE image off disk to do so —
+# slow on huge images. Inspect and Tree need only the structure, not the hashes, so we
+# install a gate around mkpfs's verify_file_payload_hashes that skips the work when the
+# calling thread sets the thread-local flag. Thread-local (not a global swap) so a
+# concurrent real Verify on another worker thread still gets true hashes — no race.
 _skip_payload_hashing = threading.local()
 _original_verify_file_payload_hashes = _mkpfs_pfs.verify_file_payload_hashes
 
@@ -50,11 +51,7 @@ def _gated_verify_file_payload_hashes(*args: object, **kwargs: object) -> tuple[
 
 _mkpfs_pfs.verify_file_payload_hashes = _gated_verify_file_payload_hashes
 
-_OUT_OF_MEMORY = (
-    "Out of memory reading this image — it contains a very large file "
-    "(mkpfs loads each file fully into RAM). Try an image with smaller files "
-    "or a machine with more RAM."
-)
+_OUT_OF_MEMORY = "Out of memory reading this image. Try an image with smaller files or a machine with more RAM."
 
 
 @dataclass(frozen=True)
@@ -164,7 +161,8 @@ def _to_inspection(raw: PFSImageInspection, *, hashes_computed: bool) -> Inspect
     Args:
         raw: The mkpfs inspection result.
         hashes_computed: Whether file-payload hashes were actually computed (True for
-            Verify; False for Inspect/Tree, which skip hashing to stay memory-safe).
+            Verify; False for Inspect/Tree, which skip hashing to avoid reading the
+            whole image).
     """
     header: HeaderInfo | None = None
     if raw.header is not None:
@@ -223,9 +221,9 @@ def _inspect_structure_only(image: Path, ekpfs: bytes | None, new_crypt: bool) -
     """Run inspect_pfs_image WITHOUT hashing file payloads.
 
     Inspect and Tree need only the structure (header / inodes / dirents / counts).
-    mkpfs's verify_file_payload_hashes loads each file wholly into RAM to hash it,
-    which OOM-kills on huge files. The thread-local flag tells the installed gate
-    (`_gated_verify_file_payload_hashes`) to skip hashing for this call only, so a
+    mkpfs's verify_file_payload_hashes reads the entire image off disk to hash it
+    (flat memory, but slow on huge images). The thread-local flag tells the installed
+    gate (`_gated_verify_file_payload_hashes`) to skip hashing for this call only, so a
     concurrent real Verify on another thread is unaffected.
     """
     _skip_payload_hashing.active = True
@@ -252,8 +250,8 @@ def inspect_image(image: Path, ekpfs_hex: str = "", new_crypt: bool = False) -> 
         return _error_inspection(image, problem)
     try:
         ekpfs = _ekpfs_bytes(ekpfs_hex)
-        # Inspect needs only the structure, not payload hashes — skip hashing so a
-        # huge file in the image cannot OOM-kill the process.
+        # Inspect needs only the structure, not payload hashes — skip hashing so we
+        # don't read the whole image off disk just to inspect it (slow on huge images).
         raw = _inspect_structure_only(image, ekpfs, new_crypt)
     except MemoryError:
         return _error_inspection(image, _OUT_OF_MEMORY)
@@ -344,8 +342,8 @@ def read_tree(image: Path, ekpfs_hex: str = "", new_crypt: bool = False) -> Tree
         return TreeResult(image=str(image), ok=False, root=None, errors=(problem,), warnings=())
     try:
         ekpfs = _ekpfs_bytes(ekpfs_hex)
-        # Tree needs only the structure, not payload hashes — skip hashing so a
-        # huge file in the image cannot OOM-kill the process.
+        # Tree needs only the structure, not payload hashes — skip hashing so we
+        # don't read the whole image off disk just to build the tree (slow on huge images).
         raw = _inspect_structure_only(image, ekpfs, new_crypt)
         if raw.uroot_inode < 0:
             return TreeResult(

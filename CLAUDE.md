@@ -24,7 +24,7 @@ Type hints everywhere; Google-style docstrings; prefer `X | None` over `Optional
 
 ## The mkpfs boundary (most important rule)
 
-- mkpfs is a **pinned, read-only dependency** (`mkpfs>=0.0.5,<0.1.0`) — never edit it.
+- mkpfs is a **pinned, read-only dependency** (`mkpfs>=0.0.8,<0.1.0`) — never edit it.
 - ALL imports of / calls to `mkpfs.*` live in the single module **`mkpfs_tui/mkpfs_runner.py`**, which
   exposes the app's own value types. No other module imports mkpfs.
 - When you depend on new mkpfs surface, add an assertion to `tests/test_mkpfs_contract.py` so an upstream

@@ -99,3 +99,10 @@
     width: auto;
     padding: 1 1 0 0;
 }
+
+#pack-folder-note {
+    width: 1fr;
+    height: auto;
+    color: $warning;
+    padding: 0 1;
+}

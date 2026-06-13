@@ -245,13 +245,26 @@ async def test_output_autofills_from_source() -> None:
     app = _Host()
     async with app.run_test(size=(140, 50)) as pilot:
         view = app.query_one(PackView)
+        # File mode is where compression is available (default on) -> .ffpfsc
+        await pilot.click("#pack-mode-file")
+        await pilot.pause()
         view.query_one("#pack-source", PathField).value = "/data/game.exfat"
         await pilot.pause()
-        assert view.query_one("#pack-output", PathField).value == "/data/game.ffpfsc"  # compress on by default
+        assert view.query_one("#pack-output", PathField).value == "/data/game.ffpfsc"
         # turning compression off flips the extension
         view.query_one("#pack-compress", Switch).value = False
         await pilot.pause()
         assert view.query_one("#pack-output", PathField).value == "/data/game.ffpfs"
+
+
+async def test_folder_mode_autofills_uncompressed_extension() -> None:
+    """Folder mode (compression locked off) derives the uncompressed .ffpfs extension."""
+    app = _Host()
+    async with app.run_test(size=(140, 50)) as pilot:
+        view = app.query_one(PackView)  # default radio is Folder
+        view.query_one("#pack-source", PathField).value = "/data/game-app"
+        await pilot.pause()
+        assert view.query_one("#pack-output", PathField).value == "/data/game-app.ffpfs"
 
 
 async def test_output_respects_manual_edit() -> None:
@@ -265,3 +278,49 @@ async def test_output_respects_manual_edit() -> None:
         view.query_one("#pack-source", PathField).value = "/data/other.exfat"  # source changes again
         await pilot.pause()
         assert view.query_one("#pack-output", PathField).value == "/custom/out.bin"  # NOT overwritten
+
+
+async def test_compress_locked_off_in_folder_mode() -> None:
+    """Folder mode forces Compress off + disabled with the note shown; File mode unlocks it."""
+    from textual.widgets import Static
+
+    app = _Host()
+    async with app.run_test(size=(140, 50)) as pilot:
+        view = app.query_one(PackView)
+        await pilot.pause()
+        compress = view.query_one("#pack-compress", Switch)
+        note = view.query_one("#pack-folder-note", Static)
+        # Default Folder mode: locked off, disabled, note visible
+        assert compress.value is False
+        assert compress.disabled is True
+        assert note.display is True
+
+        # File mode: unlocked, default on, note hidden
+        await pilot.click("#pack-mode-file")
+        await pilot.pause()
+        assert compress.value is True
+        assert compress.disabled is False
+        assert note.display is False
+
+        # Back to Folder: locked off again
+        await pilot.click("#pack-mode-folder")
+        await pilot.pause()
+        assert compress.value is False
+        assert compress.disabled is True
+        assert note.display is True
+
+
+async def test_folder_mode_argv_never_compresses() -> None:
+    """A folder-mode pack always emits --no-compress (compression is locked off)."""
+    from mkpfs_tui.models import build_pack_argv
+
+    app = _Host()
+    async with app.run_test(size=(140, 50)) as pilot:
+        view = app.query_one(PackView)  # default Folder mode
+        view.query_one("#pack-source", PathField).value = "/data/game-app"
+        view.query_one("#pack-output", PathField).value = "/data/game-app.ffpfs"
+        await pilot.pause()
+        opts = view.read_options()
+        assert opts.mode == "folder"
+        assert opts.compress is False
+        assert "--no-compress" in build_pack_argv(opts)
