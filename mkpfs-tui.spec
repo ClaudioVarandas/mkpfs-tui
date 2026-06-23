@@ -4,7 +4,11 @@ from PyInstaller.utils.hooks import collect_all, collect_submodules
 
 datas = [("mkpfs_tui/styles.tcss", "mkpfs_tui")]
 binaries = []
-hiddenimports = collect_submodules("mkpfs")
+hiddenimports = collect_submodules("mkpfs") + [
+    # mkpfs_tui.exfat.cli is reached only via the runtime string dispatch in app.main();
+    # PyInstaller cannot trace it statically, so declare it explicitly.
+    "mkpfs_tui.exfat.cli",
+]
 
 for pkg in ("textual", "rich"):
     pkg_datas, pkg_binaries, pkg_hidden = collect_all(pkg)

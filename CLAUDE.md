@@ -1,8 +1,8 @@
 # mkpfs-tui — conventions
 
 A [Textual](https://textual.textualize.io/) terminal UI over the third-party `mkpfs` library
-(pack / inspect / verify / tree / unpack PlayStation PFS images). Feature-complete; published on PyPI as
-`mkpfs-tui`, plus a Linux binary on GitHub Releases.
+(pack / inspect / verify / tree / unpack PlayStation PFS images + build raw dumps to exFAT). Feature-complete;
+published on PyPI as `mkpfs-tui`, plus a Linux binary on GitHub Releases.
 
 ## Working agreement
 
@@ -35,8 +35,12 @@ Type hints everywhere; Google-style docstrings; prefer `X | None` over `Optional
 - `app.py` — app shell + `main()` (+ the frozen-binary self-dispatch for packaging).
 - `mkpfs_runner.py` — the mkpfs boundary: value types + operation functions (`inspect_image`, `verify_image`,
   `read_tree`, `unpack_image`, `run_pack`) + the `UiProgress` adapter.
-- `screens/` — the five views (Inspect/Verify/Tree subclass `ReadView`; Pack and Unpack are plain
+- `screens/` — the six views (Inspect/Verify/Tree subclass `ReadView`; Pack, Unpack, and BuildExfat are plain
   `Container`s) + `confirm.py` (overwrite modal) + `picker.py` (file/dir picker).
+- `exfat/` — **non-mkpfs** subsystem that builds raw dumps into `.exfat` images via system
+  tools (`exfatprogs`/`mount`/`rsync`); `sizing` (size+cluster), `naming` (param.json→name/label),
+  `tools` (preflight), `builder` (`run_build` pipeline), `cli` (`build-exfat` subcommand).
+  **Must NOT import `mkpfs.*`** (the boundary, inverted). `screens/build_exfat.py` is its view.
 - `widgets/` — `path_field`, `result_panel`, `sidebar`. `messages.py` — worker→view messages.
   `models.py` — `PackOptions` + `build_pack_argv`. `progress_parser.py` — pack stderr parsing.
 

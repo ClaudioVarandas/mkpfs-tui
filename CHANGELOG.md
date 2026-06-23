@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and this project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] — 2026-06-23
+
+### Added
+
+- feat: Build exFAT — turn a PS5 dump folder into a `.exfat` image for ShadowMountPlus
+  (new TUI view + `build-exfat` CLI; adaptive cluster, param.json-derived name/label,
+  sudo loop-mount copy, optional fsck verify). Requires `exfatprogs` + `rsync` at runtime.
+
 ## [0.1.2] — 2026-06-12
 
 ### Changed
@@ -95,6 +103,7 @@ First public release — a [Textual](https://textual.textualize.io/) terminal UI
 - Python ≥ 3.11. Pins `mkpfs >= 0.0.5, < 0.1.0` and `textual >= 0.86`.
 - Licensed GPL-3.0-or-later (it imports mkpfs, which is GPLv3).
 
+[0.2.0]: https://github.com/ClaudioVarandas/mkpfs-tui/releases/tag/v0.2.0
 [0.1.2]: https://github.com/ClaudioVarandas/mkpfs-tui/releases/tag/v0.1.2
 [0.1.1]: https://github.com/ClaudioVarandas/mkpfs-tui/releases/tag/v0.1.1
 [0.1.0]: https://github.com/ClaudioVarandas/mkpfs-tui/releases/tag/v0.1.0
