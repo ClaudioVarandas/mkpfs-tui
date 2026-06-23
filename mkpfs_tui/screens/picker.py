@@ -9,7 +9,7 @@ from textual.app import ComposeResult
 from textual.binding import BindingType
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Button, DirectoryTree, Label, Tree
+from textual.widgets import Button, DirectoryTree, Input, Label, Tree
 
 
 class DirectoryPickerScreen(ModalScreen[str | None]):
@@ -30,13 +30,48 @@ class DirectoryPickerScreen(ModalScreen[str | None]):
         self._selection: str | None = None
 
     def compose(self) -> ComposeResult:
-        """Render the tree and Choose/Cancel buttons."""
+        """Render the path bar, the tree, and Choose/Cancel buttons."""
         with Vertical(id="picker-box"):
             yield Label(f"Select a {self.want}")
+            with Horizontal(id="picker-path-row"):
+                yield Button("Up", id="picker-up")
+                yield Input(value=self._root, id="picker-path", placeholder="path (type or ~ then Enter)")
             yield DirectoryTree(self._root, id="picker-tree")
             with Horizontal(id="picker-buttons"):
                 yield Button("Choose", id="picker-choose", variant="primary")
                 yield Button("Cancel", id="picker-cancel")
+
+    def on_mount(self) -> None:
+        """Focus the tree so arrow keys navigate immediately."""
+        self.query_one("#picker-tree", DirectoryTree).focus()
+
+    def _reroot(self, raw: str) -> None:
+        """Re-root the tree at ``raw`` if it resolves to an existing directory.
+
+        Invalid or non-directory paths are ignored (the current root stays put).
+        ``~`` is expanded to the user's home directory.
+
+        Args:
+            raw: The candidate directory path (may contain ``~``).
+        """
+        try:
+            resolved = Path(raw).expanduser().resolve()
+        except OSError:
+            return
+        if not resolved.is_dir():
+            return
+        self._root = str(resolved)
+        self.query_one("#picker-path", Input).value = self._root
+        self.query_one("#picker-tree", DirectoryTree).path = self._root
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Re-root the tree when a path is entered in the path box.
+
+        Args:
+            event: The submit event from the path Input.
+        """
+        if event.input.id == "picker-path":
+            self._reroot(event.value)
 
     def set_selection(self, path: str) -> None:
         """Set the current selection (used by the tree handlers and tests)."""
@@ -85,7 +120,9 @@ class DirectoryPickerScreen(ModalScreen[str | None]):
         Args:
             event: The button-pressed event.
         """
-        if event.button.id == "picker-choose":
+        if event.button.id == "picker-up":
+            self._reroot(str(Path(self._root).parent))
+        elif event.button.id == "picker-choose":
             self.dismiss(self._selection)
         elif event.button.id == "picker-cancel":
             self.dismiss(None)

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from textual.app import App, ComposeResult
-from textual.widgets import Button, DirectoryTree
+from textual.widgets import Button, DirectoryTree, Input
 
 from mkpfs_tui.screens.picker import DirectoryPickerScreen
 
@@ -86,3 +86,79 @@ async def test_navigate_then_choose_returns_file(tmp_path: Path) -> None:
         await pilot.pause()
 
         assert app.picked == str(target)
+
+
+async def test_up_button_reroots_to_parent(tmp_path: Path) -> None:
+    """The Up button re-roots the tree to the parent of the current root."""
+    sub = tmp_path / "a" / "b"
+    sub.mkdir(parents=True)
+    app = _Host(want="dir", root=str(sub))
+    async with app.run_test(size=(100, 30)) as pilot:
+        await pilot.click("#open")
+        await pilot.pause()
+        screen = app.screen
+        assert isinstance(screen, DirectoryPickerScreen)
+        tree = screen.query_one("#picker-tree", DirectoryTree)
+        assert Path(tree.path) == sub
+
+        await pilot.click("#picker-up")
+        await pilot.pause()
+        assert Path(tree.path) == sub.parent  # tmp_path / "a"
+        # The path box reflects the new root.
+        assert Path(screen.query_one("#picker-path", Input).value) == sub.parent
+
+
+async def test_path_box_reroots_to_typed_dir(tmp_path: Path) -> None:
+    """Typing a directory in the path box and pressing Enter re-roots the tree."""
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    app = _Host(want="dir", root=str(tmp_path))
+    async with app.run_test(size=(100, 30)) as pilot:
+        await pilot.click("#open")
+        await pilot.pause()
+        screen = app.screen
+        assert isinstance(screen, DirectoryPickerScreen)
+
+        path_box = screen.query_one("#picker-path", Input)
+        path_box.focus()
+        path_box.value = str(elsewhere)
+        await pilot.press("enter")
+        await pilot.pause()
+
+        assert Path(screen.query_one("#picker-tree", DirectoryTree).path) == elsewhere
+
+
+async def test_path_box_expands_user_home(tmp_path: Path) -> None:
+    """A ``~`` in the path box expands to the user's home directory."""
+    app = _Host(want="dir", root=str(tmp_path))
+    async with app.run_test(size=(100, 30)) as pilot:
+        await pilot.click("#open")
+        await pilot.pause()
+        screen = app.screen
+        assert isinstance(screen, DirectoryPickerScreen)
+
+        path_box = screen.query_one("#picker-path", Input)
+        path_box.focus()
+        path_box.value = "~"
+        await pilot.press("enter")
+        await pilot.pause()
+
+        assert Path(screen.query_one("#picker-tree", DirectoryTree).path) == Path.home()
+
+
+async def test_invalid_path_is_ignored(tmp_path: Path) -> None:
+    """Typing a non-existent path leaves the current root unchanged."""
+    app = _Host(want="dir", root=str(tmp_path))
+    async with app.run_test(size=(100, 30)) as pilot:
+        await pilot.click("#open")
+        await pilot.pause()
+        screen = app.screen
+        assert isinstance(screen, DirectoryPickerScreen)
+
+        path_box = screen.query_one("#picker-path", Input)
+        path_box.focus()
+        path_box.value = str(tmp_path / "does-not-exist")
+        await pilot.press("enter")
+        await pilot.pause()
+
+        assert Path(screen.query_one("#picker-tree", DirectoryTree).path) == tmp_path
