@@ -22,10 +22,10 @@ class _Host(App[None]):
         self.selected.append(event.view_id)
 
 
-async def test_sidebar_lists_seven_actions() -> None:
+async def test_sidebar_lists_eight_actions() -> None:
     app = _Host()
     async with app.run_test():
-        assert len(app.query_one(ListView).children) == 7
+        assert len(app.query_one(ListView).children) == 8
 
 
 def test_sidebar_has_about_entry() -> None:

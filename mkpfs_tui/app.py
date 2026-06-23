@@ -14,6 +14,7 @@ from textual.widgets import ContentSwitcher, Footer, Header
 from mkpfs_tui import mkpfs_runner
 from mkpfs_tui.screens.about import AboutView
 from mkpfs_tui.screens.build_exfat import BuildExfatView
+from mkpfs_tui.screens.deploy import DeployView
 from mkpfs_tui.screens.inspect import InspectView
 from mkpfs_tui.screens.pack import PackView
 from mkpfs_tui.screens.picker import DirectoryPickerScreen
@@ -45,6 +46,7 @@ class MkpfsTuiApp(App[None]):
                 yield TreeView(id="tree")
                 yield UnpackView(id="unpack")
                 yield BuildExfatView(id="build")
+                yield DeployView(id="deploy")
         yield Footer()
 
     def on_mount(self) -> None:

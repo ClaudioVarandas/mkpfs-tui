@@ -45,7 +45,7 @@ async def test_sidebar_switches_every_view() -> None:
         nav = app.query_one(ListView)
         # Setting nav.index fires ListView.Highlighted -> Sidebar.ActionSelected -> ContentSwitcher.current.
         # One pause() drains that two-hop chain because wait_for_idle polls until the app is idle.
-        for index, view_id in enumerate(["pack", "inspect", "verify", "tree", "unpack", "build", "about"]):
+        for index, view_id in enumerate(["pack", "inspect", "verify", "tree", "unpack", "build", "deploy", "about"]):
             nav.index = index
             await pilot.pause()
             assert switcher.current == view_id
