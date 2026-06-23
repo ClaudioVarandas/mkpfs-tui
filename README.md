@@ -1,18 +1,18 @@
 # mkpfs-tui
 
-[![CI](https://github.com/ClaudioVarandas/mkpfs-tui/actions/workflows/ci.yml/badge.svg)](https://github.com/ClaudioVarandas/mkpfs-tui/actions/workflows/ci.yml)
+[![CI](https://github.com/TinyBacklog/mkpfs-tui/actions/workflows/ci.yml/badge.svg)](https://github.com/TinyBacklog/mkpfs-tui/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-green)](LICENSE)
 
 A [Textual](https://textual.textualize.io/) terminal UI for [mkpfs](https://pypi.org/project/mkpfs/) —
-**pack, inspect, verify, tree, unpack, and build raw dumps to exFAT** from a single sidebar-driven app. Every
+**pack, inspect, verify, tree, unpack, build raw dumps to exFAT, and deploy to a jailbroken PS5 over FTP** from a single sidebar-driven app. Every
 operation has its own view with file/directory pickers, live progress, and a result panel that surfaces
 warnings and errors without ever leaving the terminal.
 
 > mkpfs-tui is a third-party frontend. It pins `mkpfs` as a dependency and never modifies it.
 
 **Contents:** [Screenshots](#screenshots) · [Operations](#operations) · [Requirements](#requirements) ·
-[Install](#install) · [Usage](#usage) · [Build exFAT](#build-exfat) · [Contributing](#contributing) · [License](#license)
+[Install](#install) · [Usage](#usage) · [Build exFAT](#build-exfat) · [Deploy to PS5](#deploy-to-ps5) · [Contributing](#contributing) · [License](#license)
 
 ---
 
@@ -26,6 +26,7 @@ warnings and errors without ever leaving the terminal.
 | **Tree**       | Browse the file tree stored inside an image. |
 | **Unpack**     | Extract an image to a target directory, with progress and a files/dirs/bytes summary. |
 | **Build exFAT** | Turn a PS5 dump folder into a `.exfat` image for ShadowMountPlus — adaptive cluster, param.json-derived name/label. |
+| **Deploy**      | Push a built image (or any file) to a jailbroken PS5 over FTP — live progress, remote listing, overwrite confirm. |
 
 ---
 
@@ -33,23 +34,23 @@ warnings and errors without ever leaving the terminal.
 
 **About** — the welcome screen:
 
-![mkpfs-tui — the About / welcome screen](https://raw.githubusercontent.com/ClaudioVarandas/mkpfs-tui/master/screenshots/about.png)
+![mkpfs-tui — the About / welcome screen](https://raw.githubusercontent.com/TinyBacklog/mkpfs-tui/master/screenshots/about.png)
 
 **Pack** — build an image from a folder or file:
 
-![mkpfs-tui — the Pack view](https://raw.githubusercontent.com/ClaudioVarandas/mkpfs-tui/master/screenshots/pack.png)
+![mkpfs-tui — the Pack view](https://raw.githubusercontent.com/TinyBacklog/mkpfs-tui/master/screenshots/pack.png)
 
 **Inspect** — header, counts, sizes, and checksums:
 
-![mkpfs-tui — the Inspect view](https://raw.githubusercontent.com/ClaudioVarandas/mkpfs-tui/master/screenshots/inspect.png)
+![mkpfs-tui — the Inspect view](https://raw.githubusercontent.com/TinyBacklog/mkpfs-tui/master/screenshots/inspect.png)
 
 **Verify** — structure / checksum checks with a PASS/FAIL banner:
 
-![mkpfs-tui — the Verify view](https://raw.githubusercontent.com/ClaudioVarandas/mkpfs-tui/master/screenshots/verify.png)
+![mkpfs-tui — the Verify view](https://raw.githubusercontent.com/TinyBacklog/mkpfs-tui/master/screenshots/verify.png)
 
 **Tree** — browse the file tree stored inside an image:
 
-![mkpfs-tui — the Tree view](https://raw.githubusercontent.com/ClaudioVarandas/mkpfs-tui/master/screenshots/tree.png)
+![mkpfs-tui — the Tree view](https://raw.githubusercontent.com/TinyBacklog/mkpfs-tui/master/screenshots/tree.png)
 
 ---
 
@@ -67,7 +68,7 @@ warnings and errors without ever leaving the terminal.
 ## Install
 
 > Prefer a self-contained download? Grab a build from the
-> [Releases](https://github.com/ClaudioVarandas/mkpfs-tui/releases) page.
+> [Releases](https://github.com/TinyBacklog/mkpfs-tui/releases) page.
 
 The cross-platform way is via Python, using either [uv](https://docs.astral.sh/uv/) (recommended —
 `uvx` runs it without installing) or [pipx](https://pipx.pypa.io/) (installs the `mkpfs-tui` command).
@@ -91,7 +92,7 @@ mkpfs-tui
 ```
 
 **No Python?** Download `mkpfs-tui-linux-x86_64.tar.gz` from the
-[Releases](https://github.com/ClaudioVarandas/mkpfs-tui/releases) page, then:
+[Releases](https://github.com/TinyBacklog/mkpfs-tui/releases) page, then:
 
 ```bash
 tar -xzf mkpfs-tui-linux-x86_64.tar.gz
@@ -132,7 +133,7 @@ Launch the app (`uvx mkpfs-tui`, or `mkpfs-tui` if installed). You land on the *
 
 ### The interface
 
-- **Left sidebar** — the six operations. Move with `↑`/`↓`; the right pane switches as you go.
+- **Left sidebar** — the seven operations. Move with `↑`/`↓`; the right pane switches as you go.
 - **Right pane** — the selected operation's form, run button, progress, and a result panel
   (errors in red, warnings in amber, success in green).
 - **Browse…** buttons open a file/directory picker — navigate with the arrows, **Choose** to accept,
@@ -166,11 +167,17 @@ Launch the app (`uvx mkpfs-tui`, or `mkpfs-tui` if installed). You land on the *
   clear a non-empty output directory first (you'll be asked to confirm the deletion).
 - **Build exFAT** — pick a **Dump folder** (a PS5 game dump directory) and an **Output** path, then press
   **Build**. The app reads `param.json` inside the dump to suggest the output filename and the exFAT volume
-  label; you can override both. Choose a cluster size or leave it on **Auto** (adaptive). Tick **Verify after**
-  to run `fsck.exfat` on the finished image. The pipeline is: `truncate` → `mkfs.exfat` → `sudo mount` (loop)
-  → `rsync` → `umount` → optional `fsck.exfat`. ShadowMountPlus keys off the `.exfat` filename, and all game
-  files are placed at the image root. Requires `exfatprogs` + `rsync` on the host; the mount step needs
-  `sudo`.
+  label; you can override both. Use a **Preset** (PPSA / +Title / +Version) and the **Lowercase** toggle to
+  control the suggested filename. Choose a cluster size or leave it on **Auto** (adaptive). Tick **Verify after**
+  to run `fsck.exfat` on the finished image. Tick **Deploy after** to push the finished image to the PS5
+  immediately (requires FTP host set in the Deploy view or config). The pipeline is: `truncate` → `mkfs.exfat`
+  → `sudo mount` (loop) → `rsync` → `umount` → optional `fsck.exfat`. ShadowMountPlus keys off the `.exfat`
+  filename, and all game files are placed at the image root. Requires `exfatprogs` + `rsync` on the host; the
+  mount step needs `sudo`.
+- **Deploy** — fill in the **Host** (and optionally **Port**, **Path**, **User**, **Remote name**) then press
+  **List** to browse the remote directory or **Deploy** to upload. Settings persist to
+  `~/.config/mkpfs-tui/config.toml` (password is never stored). FTP is plain (no TLS) — intended for LAN use
+  with a jailbreak payload running on the console; the console mounts game images itself via ShadowMountPlus.
 
 ### Encrypted images
 
@@ -184,18 +191,66 @@ leave them blank/off for unencrypted ones. In Pack, the key is only applied when
 The `build-exfat` subcommand exposes the same pipeline as the TUI view for scripting:
 
 ```bash
-mkpfs-tui build-exfat <dump> -o out.exfat [--cluster auto|32K|64K|128K|256K|512K|1M] [--label LABEL] [--no-verify]
+mkpfs-tui build-exfat <dump> [-o out.exfat] [--cluster auto|32K|64K|128K|256K|512K|1M] \
+    [--label LABEL] [--preset ppsa|title|version] [--lower] [--no-verify] [--deploy]
 ```
 
 - `<dump>` — path to the PS5 dump folder (must contain `sce_sys/param.json`).
-- `-o` / `--output` — path for the `.exfat` image to create.
+- `-o` / `--output` — path for the `.exfat` image to create (auto-derived from `param.json` if omitted).
 - `--cluster` — exFAT cluster size; default `auto` chooses adaptively based on the dump size.
 - `--label` — override the volume label (auto-derived from `param.json` if omitted).
+- `--preset` — filename preset: `ppsa` (PPSA code only), `title` (title only), or `version` (title + version, default).
+- `--lower` — lowercase the suggested filename.
 - `--no-verify` — skip the `fsck.exfat` check after building.
+- `--deploy` — push the finished image to the PS5 over FTP immediately after building (uses the FTP config from `~/.config/mkpfs-tui/config.toml`; requires `--host` if no config is saved).
 
 **Runtime requirements:** `exfatprogs` (provides `mkfs.exfat` + `fsck.exfat`) and `rsync` must be installed.
 The copy step mounts the image via a loop device — `sudo` is required for that step. The output `.exfat`
 filename is what ShadowMountPlus uses to identify the title; all game files are placed at the image root.
+
+---
+
+## Deploy to PS5
+
+mkpfs-tui can push a file (typically the `.exfat` image you just built) to a jailbroken PS5 running an FTP
+server (such as the etaHEN payload) over a plain LAN FTP connection. FTP is not encrypted — this is intended
+for local network use only. The console mounts game images itself via ShadowMountPlus; mkpfs-tui only handles
+the upload side.
+
+### Standalone Deploy view
+
+Open the **Deploy** view from the sidebar, fill in:
+
+- **Host** — IP address of your PS5.
+- **Port** — FTP port (default **2121**, the etaHEN default).
+- **Path** — remote directory to upload into (default **`/data/etaHEN/games/`**).
+- **User** — FTP username (default `anonymous`).
+- **File** — local file to upload.
+- **Remote name** — filename on the console (defaults to the local filename).
+
+Press **List** to browse the remote directory. Press **Deploy** to upload with a live progress bar. If a file
+with the same name already exists on the console you'll be asked to confirm before overwriting. Settings
+(host / port / path / user) are saved to `~/.config/mkpfs-tui/config.toml` — the password is never stored.
+
+### `deploy` CLI
+
+```bash
+mkpfs-tui deploy <file> --host <PS5-IP> [--port 2121] [--path /data/etaHEN/games/] \
+    [--user anonymous] [--name remote-filename.exfat]
+```
+
+- `<file>` — local file to push.
+- `--host` — PS5 IP address (required if no host is saved in the config).
+- `--port` — FTP port (default 2121).
+- `--path` — remote directory (default `/data/etaHEN/games/`).
+- `--user` — FTP username (default `anonymous`); enter the password interactively when prompted.
+- `--name` — override the remote filename (defaults to the local filename).
+
+### Inline deploy after build
+
+In the **Build exFAT** view, tick **Deploy after** to push the finished image to the PS5 immediately after
+the build completes. The same FTP settings apply (loaded from config, or entered in the Deploy view first).
+The `build-exfat --deploy` CLI flag does the same for scripted workflows.
 
 ---
 
@@ -206,7 +261,7 @@ Issues and PRs are welcome. The project uses [`uv`](https://docs.astral.sh/uv/) 
 ### Set up
 
 ```bash
-git clone https://github.com/ClaudioVarandas/mkpfs-tui
+git clone https://github.com/TinyBacklog/mkpfs-tui
 cd mkpfs-tui
 uv sync                                              # creates .venv with deps + dev tools
 uv run textual run --dev mkpfs_tui.app:MkpfsTuiApp   # run the app (or: uv run python -m mkpfs_tui)

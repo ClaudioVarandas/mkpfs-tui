@@ -5,9 +5,10 @@ from PyInstaller.utils.hooks import collect_all, collect_submodules
 datas = [("mkpfs_tui/styles.tcss", "mkpfs_tui")]
 binaries = []
 hiddenimports = collect_submodules("mkpfs") + [
-    # mkpfs_tui.exfat.cli is reached only via the runtime string dispatch in app.main();
-    # PyInstaller cannot trace it statically, so declare it explicitly.
+    # mkpfs_tui.exfat.cli and mkpfs_tui.deploy.cli are reached only via the runtime string
+    # dispatch in app.main(); PyInstaller cannot trace them statically, so declare explicitly.
     "mkpfs_tui.exfat.cli",
+    "mkpfs_tui.deploy.cli",
 ]
 
 for pkg in ("textual", "rich"):

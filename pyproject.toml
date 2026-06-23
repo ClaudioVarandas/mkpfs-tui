@@ -27,9 +27,9 @@ dependencies = [
 mkpfs-tui = "mkpfs_tui.app:main"
 
 [project.urls]
-Homepage = "https://github.com/ClaudioVarandas/mkpfs-tui"
-Repository = "https://github.com/ClaudioVarandas/mkpfs-tui"
-Issues = "https://github.com/ClaudioVarandas/mkpfs-tui/issues"
+Homepage = "https://github.com/TinyBacklog/mkpfs-tui"
+Repository = "https://github.com/TinyBacklog/mkpfs-tui"
+Issues = "https://github.com/TinyBacklog/mkpfs-tui/issues"
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
