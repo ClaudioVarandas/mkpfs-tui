@@ -79,7 +79,7 @@ def run_deploy(
     if not opts.overwrite:
         try:
             existing = {entry_name for entry_name, _size in client.list_dir(opts.target, opts.target.path)}
-        except Exception:  # noqa: BLE001, RUF100 — listing is best-effort; fall through to transfer
+        except Exception:  # listing is best-effort; fall through to transfer
             existing = set()
         if name in existing:
             return DeployResult(False, remote_path, 0, needs_confirm=True)
@@ -88,7 +88,7 @@ def run_deploy(
         sent = client.upload(opts.target, opts.local_file, name, progress_cb, should_cancel)
     except TransferCancelled:
         return DeployResult(False, remote_path, 0, cancelled=True)
-    except Exception as exc:  # noqa: BLE001, RUF100 — surface any ftplib/OS error as a result
+    except Exception as exc:  # surface any ftplib/OS error as a result
         return DeployResult(False, remote_path, 0, errors=(str(exc) or exc.__class__.__name__,))
 
     return DeployResult(True, remote_path, sent)
