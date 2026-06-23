@@ -62,3 +62,35 @@ def test_label_truncated_to_11(tmp_path: Path) -> None:
     info = read_param(_dump(tmp_path, {"titleName": "Super Long Game Name"}))
     # No titleId -> label from title, truncated to 11 and stripped.
     assert suggest_label(info, tmp_path / "DUMP") == "Super Long"
+
+
+from mkpfs_tui.exfat.naming import PRESETS  # noqa: E402  (extends Part A imports)
+
+
+def test_preset_ppsa_is_title_id_only(tmp_path: Path) -> None:
+    info = read_param(_dump(tmp_path, _PARAM))
+    assert suggest_filename(info, tmp_path / "DUMP", preset="ppsa") == "PPSA01234.exfat"
+
+
+def test_preset_title_omits_version(tmp_path: Path) -> None:
+    info = read_param(_dump(tmp_path, _PARAM))
+    assert suggest_filename(info, tmp_path / "DUMP", preset="title") == "PPSA01234 - My Game Deluxe.exfat"
+
+
+def test_preset_version_is_default(tmp_path: Path) -> None:
+    info = read_param(_dump(tmp_path, _PARAM))
+    assert suggest_filename(info, tmp_path / "DUMP") == suggest_filename(info, tmp_path / "DUMP", preset="version")
+
+
+def test_lowercase_toggle(tmp_path: Path) -> None:
+    info = read_param(_dump(tmp_path, _PARAM))
+    assert suggest_filename(info, tmp_path / "DUMP", lowercase=True) == "ppsa01234 - my game deluxe (01.00).exfat"
+
+
+def test_unknown_preset_falls_back_to_version(tmp_path: Path) -> None:
+    info = read_param(_dump(tmp_path, _PARAM))
+    assert suggest_filename(info, tmp_path / "DUMP", preset="bogus") == suggest_filename(info, tmp_path / "DUMP")
+
+
+def test_presets_table() -> None:
+    assert PRESETS == ("ppsa", "title", "version")

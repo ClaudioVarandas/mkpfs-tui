@@ -16,6 +16,8 @@ from pathlib import Path
 _ILLEGAL = re.compile(r'[\\/:*?"<>|\x00-\x1f]')
 _LABEL_MAX = 11
 
+PRESETS: tuple[str, str, str] = ("ppsa", "title", "version")
+
 
 @dataclass(frozen=True)
 class ParamInfo:
@@ -71,25 +73,51 @@ def _sanitize(text: str) -> str:
     return re.sub(r"\s+", " ", _ILLEGAL.sub("", text)).strip()
 
 
-def suggest_filename(info: ParamInfo | None, dump: Path) -> str:
+def _filename_core(info: ParamInfo | None, dump: Path, preset: str) -> str:
+    """Build the pre-sanitization filename stem for the chosen preset.
+
+    Args:
+        info: Parsed param info, or None to fall back to the dump name.
+        dump: The dump folder (its name is the fallback stem).
+        preset: One of ``PRESETS`` (ppsa/title/version).
+
+    Returns:
+        The raw stem (illegal chars not yet stripped).
+    """
+    if info is None:
+        return dump.name
+    if preset == "ppsa":
+        return info.title_id or info.title or dump.name
+    base = (
+        f"{info.title_id} - {info.title}"
+        if info.title_id and info.title
+        else (info.title_id or info.title or dump.name)
+    )
+    if preset == "version" and info.version:
+        return f"{base} ({info.version})"
+    return base
+
+
+def suggest_filename(info: ParamInfo | None, dump: Path, *, preset: str = "version", lowercase: bool = False) -> str:
     """Suggest the output .exfat filename (basename only).
 
     Args:
         info: Parsed param info, or None to fall back to the dump name.
         dump: The dump folder (its name is the fallback stem).
+        preset: Naming preset — ``ppsa`` (id only), ``title`` (id + title), or
+            ``version`` (id + title + version, the default). Unknown values
+            fall back to ``version``.
+        lowercase: When True, lowercase the whole stem.
 
     Returns:
         A sanitized basename ending in ``.exfat``.
     """
-    if info is None:
-        return f"{_sanitize(dump.name) or 'image'}.exfat"
-    if info.title_id and info.title:
-        core = f"{info.title_id} - {info.title}"
-    else:
-        core = info.title_id or info.title or dump.name
-    if info.version:
-        core = f"{core} ({info.version})"
-    return f"{_sanitize(core) or 'image'}.exfat"
+    if preset not in PRESETS:
+        preset = "version"
+    core = _sanitize(_filename_core(info, dump, preset)) or "image"
+    if lowercase:
+        core = core.lower()
+    return f"{core}.exfat"
 
 
 def suggest_label(info: ParamInfo | None, dump: Path) -> str:
