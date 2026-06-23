@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import multiprocessing
 import os
+import sys
 from typing import ClassVar
 
 from textual.app import App, ComposeResult
@@ -66,11 +67,15 @@ class MkpfsTuiApp(App[None]):
 def main() -> None:
     """Console-script entry point.
 
-    First handles two frozen-binary concerns: multiprocessing's spawn bootstrap
-    (freeze_support) and the self-dispatch into the bundled mkpfs CLI used by the
-    pack subprocess. Otherwise it runs the TUI.
+    Handles three pre-TUI concerns: multiprocessing's spawn bootstrap, the
+    self-dispatch into the bundled mkpfs CLI (pack subprocess), and the
+    ``build-exfat`` subcommand. Otherwise it runs the TUI.
     """
     multiprocessing.freeze_support()
     if os.environ.get("MKPFS_TUI_EXEC_MKPFS"):
         raise SystemExit(mkpfs_runner.run_mkpfs_cli())
+    if len(sys.argv) > 1 and sys.argv[1] == "build-exfat":
+        from mkpfs_tui.exfat import cli as exfat_cli
+
+        raise SystemExit(exfat_cli.main(sys.argv[2:]))
     MkpfsTuiApp().run()
